@@ -7,152 +7,68 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
 import sharp from 'sharp';
+import { getColorSVG, getMonoSVG, getMenuBarSVG, getFaviconSVG, getWhiteSVG } from './logos.js';
 
-// Final perfect logo settings
-const LOGO_SETTINGS = {
-    color: {
-        outerRadius: 270,
-        outerX: 512,
-        outerY: 511,
-        circleRadius: 234,
-        greenX: 513,
-        greenY: 369,
-        redX: 365,
-        redY: 595,
-        blueX: 643,
-        blueY: 595
-    },
-    mono: {
-        outerRadius: 283,
-        outerX: 508,
-        outerY: 510,
-        strokeWidth: 33,
-        outerStrokeWidth: 36
-    }
-};
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-function generateColorSVG(): string {
-    const s = LOGO_SETTINGS.color;
-    return `<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-            <clipPath id="outerCircleColor">
-                <circle cx="${s.outerX}" cy="${s.outerY}" r="${s.outerRadius}"/>
-            </clipPath>
-            <clipPath id="greenClip">
-                <circle cx="${s.greenX}" cy="${s.greenY}" r="${s.circleRadius}"/>
-            </clipPath>
-            <clipPath id="redClip">
-                <circle cx="${s.redX}" cy="${s.redY}" r="${s.circleRadius}"/>
-            </clipPath>
-            <clipPath id="blueClip">
-                <circle cx="${s.blueX}" cy="${s.blueY}" r="${s.circleRadius}"/>
-            </clipPath>
-        </defs>
-        <g clip-path="url(#outerCircleColor)">
-            <circle cx="${s.greenX}" cy="${s.greenY}" r="${s.circleRadius}" fill="#00A652"/>
-            <circle cx="${s.redX}" cy="${s.redY}" r="${s.circleRadius}" fill="#ED1C24"/>
-            <circle cx="${s.blueX}" cy="${s.blueY}" r="${s.circleRadius}" fill="#2E3192"/>
-            <g clip-path="url(#greenClip)">
-                <circle cx="${s.redX}" cy="${s.redY}" r="${s.circleRadius}" fill="#FCF006"/>
-            </g>
-            <g clip-path="url(#greenClip)">
-                <circle cx="${s.blueX}" cy="${s.blueY}" r="${s.circleRadius}" fill="#01ACF1"/>
-            </g>
-            <g clip-path="url(#redClip)">
-                <circle cx="${s.blueX}" cy="${s.blueY}" r="${s.circleRadius}" fill="#EA018E"/>
-            </g>
-            <g clip-path="url(#greenClip)">
-                <g clip-path="url(#redClip)">
-                    <circle cx="${s.blueX}" cy="${s.blueY}" r="${s.circleRadius}" fill="#FFFFFF"/>
-                </g>
-            </g>
-        </g>
-    </svg>`;
-}
-
-function generateMonoSVG(): string {
-    // Thicker strokes for menu bar visibility
-    const strokeWidth = 33;
-    const outerStrokeWidth = 36;
-
-    return `<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-            <clipPath id="outerCircleMono">
-                <circle cx="508" cy="511" r="270"/>
-            </clipPath>
-        </defs>
-        <g clip-path="url(#outerCircleMono)">
-            <circle cx="513" cy="369" r="234" fill="none" stroke="black" stroke-width="${strokeWidth}"/>
-            <circle cx="365" cy="595" r="234" fill="none" stroke="black" stroke-width="${strokeWidth}"/>
-            <circle cx="643" cy="595" r="234" fill="none" stroke="black" stroke-width="${strokeWidth}"/>
-            <circle cx="508" cy="511" r="252" fill="none" stroke="black" stroke-width="${outerStrokeWidth}"/>
-        </g>
-    </svg>`;
-}
-
-function generateMenuBarSVG(): string {
-    // Tightly cropped version for menu bar - uses 100% of height
-    const strokeWidth = 33;
-    const outerStrokeWidth = 36;
-
-    // Calculate tight bounds
-    const minX = 365 - 234 - strokeWidth;
-    const maxX = 643 + 234 + strokeWidth;
-    const minY = 369 - 234 - strokeWidth;
-    const maxY = 595 + 234 + strokeWidth;
-
-    const width = maxX - minX;
-    const height = maxY - minY;
-
-    return `<svg viewBox="${minX} ${minY} ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-            <clipPath id="outerCircleMenu">
-                <circle cx="508" cy="511" r="270"/>
-            </clipPath>
-        </defs>
-        <g clip-path="url(#outerCircleMenu)">
-            <circle cx="513" cy="369" r="234" fill="none" stroke="black" stroke-width="${strokeWidth}"/>
-            <circle cx="365" cy="595" r="234" fill="none" stroke="black" stroke-width="${strokeWidth}"/>
-            <circle cx="643" cy="595" r="234" fill="none" stroke="black" stroke-width="${strokeWidth}"/>
-            <circle cx="508" cy="511" r="252" fill="none" stroke="black" stroke-width="${outerStrokeWidth}"/>
-        </g>
-    </svg>`;
-}
-
-async function generateIcon(svgString: string, outputPath: string, size: number, addBackground = false): Promise<void> {
+async function generateIcon(
+    svgString: string, 
+    outputPath: string, 
+    size: number, 
+    options: {
+        addBackground?: boolean;
+        bgColor?: string;
+        cornerRadius?: number;
+        aspectRatio?: { width: number; height: number };
+    } = {}
+): Promise<void> {
     const dir = path.dirname(outputPath);
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
     }
 
-    if (addBackground) {
-        // For dock icons, add rounded square black background
-        const logoSize = Math.floor(size * 0.8);
-        const padding = Math.floor((size - logoSize) / 2);
-        const cornerRadius = Math.floor(size * 0.22); // macOS-style corner radius
+    const { addBackground = false, bgColor = 'black', cornerRadius, aspectRatio } = options;
 
-        const bgSvg = `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
-            <rect x="0" y="0" width="${size}" height="${size}" rx="${cornerRadius}" ry="${cornerRadius}" fill="black"/>
+    if (aspectRatio) {
+        const { width, height } = aspectRatio;
+        const logoSize = Math.min(width, height) * 0.4;
+        const logoX = Math.floor((width - logoSize) / 2);
+        const logoY = Math.floor((height - logoSize) / 2);
+        const radius = cornerRadius ?? 0;
+
+        const bgSvg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width="${width}" height="${height}" rx="${radius}" ry="${radius}" fill="${bgColor}"/>
         </svg>`;
 
-        // Create background layer
         const bg = await sharp(Buffer.from(bgSvg)).png().toBuffer();
+        const logo = await sharp(Buffer.from(svgString))
+            .resize(Math.floor(logoSize), Math.floor(logoSize))
+            .png()
+            .toBuffer();
 
-        // Create logo layer
+        await sharp(bg)
+            .composite([{ input: logo, top: logoY, left: logoX }])
+            .toFile(outputPath);
+    } else if (addBackground) {
+        const logoSize = Math.floor(size * 0.65);
+        const padding = Math.floor((size - logoSize) / 2);
+        const radius = cornerRadius ?? Math.floor(size * 0.22);
+
+        const bgSvg = `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width="${size}" height="${size}" rx="${radius}" ry="${radius}" fill="${bgColor}"/>
+        </svg>`;
+
+        const bg = await sharp(Buffer.from(bgSvg)).png().toBuffer();
         const logo = await sharp(Buffer.from(svgString))
             .resize(logoSize, logoSize)
             .png()
             .toBuffer();
 
-        // Composite them together
         await sharp(bg)
-            .composite([{
-                input: logo,
-                top: padding,
-                left: padding
-            }])
+            .composite([{ input: logo, top: padding, left: padding }])
             .toFile(outputPath);
     } else {
         await sharp(Buffer.from(svgString))
@@ -160,136 +76,161 @@ async function generateIcon(svgString: string, outputPath: string, size: number,
             .png()
             .toFile(outputPath);
     }
-    console.log(`✓ ${path.relative(process.cwd(), outputPath)} (${size}×${size})`);
-}
-
-interface IconConfig {
-    name: string;
-    size: number;
-    svg?: string;
+    console.log(`✓ ${path.relative(process.cwd(), outputPath)} (${options.aspectRatio ? `${options.aspectRatio.width}×${options.aspectRatio.height}` : `${size}×${size}`})`);
 }
 
 async function buildAll(): Promise<void> {
     console.log('🎨 Zoo Logo Builder\n');
 
-    const colorSVG = generateColorSVG();
-    const monoSVG = generateMonoSVG();
-    const menuBarSVG = generateMenuBarSVG();
+    const colorSVG = getColorSVG();
+    const monoSVG = getMonoSVG();
+    const menuBarSVG = getMenuBarSVG();
+    const faviconSVG = getFaviconSVG();
+    const whiteSVG = getWhiteSVG();
 
-    // Ensure dist directory exists
-    if (!fs.existsSync('dist')) {
-        fs.mkdirSync('dist');
+    const dirs = ['dist', 'dist/icons', 'dist/favicon', 'dist/og', 'dist/apple', 'dist/dock', 'dist/menubar'];
+    for (const dir of dirs) {
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
     }
 
     // Save SVG sources
+    console.log('📁 SVG Sources:');
     fs.writeFileSync('dist/zoo-logo.svg', colorSVG);
     fs.writeFileSync('dist/zoo-logo-mono.svg', monoSVG);
+    fs.writeFileSync('dist/zoo-logo-white.svg', whiteSVG);
     fs.writeFileSync('dist/zoo-logo-menubar.svg', menuBarSVG);
-    console.log('✓ Generated SVG sources\n');
+    fs.writeFileSync('dist/zoo-favicon.svg', faviconSVG);
+    console.log('✓ Generated 5 SVG sources\n');
 
-    // Generate icons for zoo/app
-    const appPath = '../app/apps/zoo-desktop/src-tauri/icons';
-    if (fs.existsSync(appPath)) {
-        console.log('Generating Tauri app icons:');
-
-        // Standard macOS app icons
-        const appIcons: IconConfig[] = [
-            { name: 'icon_16x16.png', size: 16 },
-            { name: '16x16.png', size: 16 },
-            { name: 'icon_16x16@2x.png', size: 32 },
-            { name: 'icon_32x32.png', size: 32 },
-            { name: '32x32.png', size: 32 },
-            { name: 'icon_32x32@2x.png', size: 64 },
-            { name: 'icon_128x128.png', size: 128 },
-            { name: '128x128.png', size: 128 },
-            { name: 'icon_128x128@2x.png', size: 256 },
-            { name: '128x128@2x.png', size: 256 },
-            { name: 'icon_256x256.png', size: 256 },
-            { name: 'icon_256x256@2x.png', size: 512 },
-            { name: 'icon_512x512.png', size: 512 },
-            { name: 'icon_512x512@2x.png', size: 1024 },
-            { name: 'icon_1024x1024.png', size: 1024 },
-        ];
-
-        for (const icon of appIcons) {
-            // Add black rounded background for dock icons (larger sizes)
-            const addBg = icon.size >= 128;
-            await generateIcon(colorSVG, path.join(appPath, icon.name), icon.size, addBg);
-        }
-
-        // Menu bar templates (monochrome, tightly cropped)
-        const menuIcons: IconConfig[] = [
-            { name: 'iconTemplate.png', size: 16 },
-            { name: 'tray-icon-macos.png', size: 16 },
-            { name: 'iconTemplate@1.5x.png', size: 24 },
-            { name: 'iconTemplate@2x.png', size: 32 },
-            { name: 'iconTemplate@3x.png', size: 48 },
-        ];
-
-        for (const icon of menuIcons) {
-            await generateIcon(menuBarSVG, path.join(appPath, icon.name), icon.size);
-        }
+    // Standard Icons
+    console.log('📁 Standard Icons (dist/icons/):');
+    for (const size of [16, 32, 64, 128, 256, 512, 1024]) {
+        await generateIcon(colorSVG, `dist/icons/logo-${size}.png`, size);
+    }
+    for (const size of [16, 32, 64, 128]) {
+        await generateIcon(monoSVG, `dist/icons/logo-mono-${size}.png`, size);
     }
 
-    // Web icons
-    const webPath = '../app/apps/zoo-desktop/public';
-    if (fs.existsSync(webPath)) {
-        console.log('\nGenerating web icons:');
-        await generateIcon(colorSVG, path.join(webPath, 'favicon.png'), 32);
-        await generateIcon(colorSVG, path.join(webPath, 'zoo-logo.png'), 256);
+    // Favicons
+    console.log('\n📁 Favicons (dist/favicon/):');
+    for (const size of [16, 32, 48, 64, 96, 128, 192, 256, 512]) {
+        await generateIcon(faviconSVG, `dist/favicon/favicon-${size}.png`, size);
     }
 
-    // Main app assets
-    const appAssetsPath = '../app/assets';
-    if (fs.existsSync(appAssetsPath)) {
-        console.log('\nGenerating app assets:');
-        await generateIcon(colorSVG, path.join(appAssetsPath, 'icon.png'), 512, true);
+    // Apple Touch Icons
+    console.log('\n📁 Apple Touch Icons (dist/apple/):');
+    for (const size of [57, 60, 72, 76, 114, 120, 144, 152, 167, 180]) {
+        await generateIcon(colorSVG, `dist/apple/apple-touch-icon-${size}.png`, size, {
+            addBackground: true, bgColor: '#000000', cornerRadius: Math.floor(size * 0.156)
+        });
     }
 
-    // Logo in app root
-    await generateIcon(colorSVG, '../app/zoo-logo.png', 256);
+    // OG Graph Images
+    console.log('\n📁 Open Graph Images (dist/og/):');
+    await generateIcon(colorSVG, 'dist/og/og-image.png', 1200, { aspectRatio: { width: 1200, height: 630 }, bgColor: '#000000' });
+    await generateIcon(colorSVG, 'dist/og/twitter-card.png', 1200, { aspectRatio: { width: 1200, height: 600 }, bgColor: '#000000' });
+    await generateIcon(colorSVG, 'dist/og/og-square.png', 1200, { aspectRatio: { width: 1200, height: 1200 }, bgColor: '#000000' });
 
-    // Reference icons
-    if (!fs.existsSync('dist/icons')) {
-        fs.mkdirSync('dist/icons', { recursive: true });
+    // Dock Icons
+    console.log('\n📁 Dock Icons (dist/dock/):');
+    for (const size of [64, 128, 256, 512, 1024]) {
+        await generateIcon(colorSVG, `dist/dock/dock-${size}.png`, size, { addBackground: true, bgColor: '#000000' });
+    }
+    for (const base of [128, 256, 512]) {
+        await generateIcon(colorSVG, `dist/dock/dock-${base}@2x.png`, base * 2, { addBackground: true, bgColor: '#000000' });
     }
 
-    console.log('Generating reference icons in dist/:');
-    const distIcons: IconConfig[] = [
-        { name: 'dist/icons/16.png', size: 16 },
-        { name: 'dist/icons/32.png', size: 32 },
-        { name: 'dist/icons/64.png', size: 64 },
-        { name: 'dist/icons/128.png', size: 128 },
-        { name: 'dist/icons/256.png', size: 256 },
-        { name: 'dist/icons/512.png', size: 512 },
-        { name: 'dist/icons/1024.png', size: 1024 },
-        { name: 'dist/icons/mono-16.png', size: 16, svg: monoSVG },
-        { name: 'dist/icons/mono-32.png', size: 32, svg: monoSVG },
-        { name: 'dist/icons/mono-64.png', size: 64, svg: monoSVG },
-        { name: 'dist/icons/menubar-16.png', size: 16, svg: menuBarSVG },
-        { name: 'dist/icons/menubar-32.png', size: 32, svg: menuBarSVG },
-    ];
+    // Menu Bar Icons
+    console.log('\n📁 Menu Bar Icons (dist/menubar/):');
+    await generateIcon(monoSVG, 'dist/menubar/menubar-16.png', 16);
+    await generateIcon(monoSVG, 'dist/menubar/menubar-16@2x.png', 32);
+    await generateIcon(monoSVG, 'dist/menubar/menubar-16@3x.png', 48);
+    await generateIcon(monoSVG, 'dist/menubar/menubar-22.png', 22);
+    await generateIcon(monoSVG, 'dist/menubar/menubar-22@2x.png', 44);
+    await generateIcon(menuBarSVG, 'dist/menubar/iconTemplate.png', 16);
+    await generateIcon(menuBarSVG, 'dist/menubar/iconTemplate@2x.png', 32);
+    await generateIcon(menuBarSVG, 'dist/menubar/iconTemplate@3x.png', 48);
 
-    for (const icon of distIcons) {
-        await generateIcon(icon.svg || colorSVG, icon.name, icon.size);
-    }
+    // Generate showcase
+    console.log('\n📄 Generating showcase...');
+    generateShowcase();
 
     console.log('\n✅ Build complete!');
+    console.log('   Open dist/showcase.html in browser to verify all assets\n');
 }
 
-// Check if sharp is installed
-const checkAndRun = async (): Promise<void> => {
-    try {
-        await import('sharp');
-    } catch (e) {
-        console.log('Installing sharp...');
-        execSync('npm install sharp', { stdio: 'inherit' });
-    }
-
-    await buildAll().catch(console.error);
-};
-
-// Run if called directly
-if (require.main === module) {
-    checkAndRun();
+function generateShowcase(): void {
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zoo Logo Assets Showcase</title>
+    <style>
+        :root { --bg-dark: #111; --bg-light: #f5f5f5; --grid-bg: repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 20px 20px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a1a; color: #fff; padding: 40px; line-height: 1.6; }
+        h1 { margin-bottom: 10px; font-size: 2rem; }
+        .subtitle { color: #888; margin-bottom: 40px; }
+        h2 { margin: 40px 0 20px; padding-bottom: 10px; border-bottom: 1px solid #333; }
+        .section { margin-bottom: 60px; }
+        .grid { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
+        .icon-item { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .icon-box { display: flex; align-items: center; justify-content: center; background: var(--grid-bg); border-radius: 8px; padding: 10px; }
+        .icon-box.dark { background: var(--bg-dark); }
+        .icon-box.light { background: var(--bg-light); }
+        .icon-box img { display: block; max-width: 100%; height: auto; }
+        .label { font-size: 12px; color: #888; text-align: center; }
+        .og-preview { max-width: 600px; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        .og-preview img { width: 100%; height: auto; display: block; }
+        .dock-demo { background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); padding: 8px; border-radius: 20px; display: inline-flex; gap: 8px; align-items: flex-end; }
+        .dock-demo img { border-radius: 22%; }
+        .timestamp { position: fixed; bottom: 20px; right: 20px; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <h1>🦁 Zoo Logo Assets</h1>
+    <p class="subtitle">Generated: ${new Date().toISOString()}</p>
+    <section class="section"><h2>📁 SVG Sources</h2><div class="grid">
+        <div class="icon-item"><div class="icon-box dark" style="width:120px;height:120px;"><img src="zoo-logo.svg" style="width:100px;"></div><span class="label">zoo-logo.svg</span></div>
+        <div class="icon-item"><div class="icon-box light" style="width:120px;height:120px;"><img src="zoo-logo-mono.svg" style="width:100px;"></div><span class="label">zoo-logo-mono.svg</span></div>
+        <div class="icon-item"><div class="icon-box" style="width:120px;height:120px;"><img src="zoo-favicon.svg" style="width:100px;"></div><span class="label">zoo-favicon.svg</span></div>
+    </div></section>
+    <section class="section"><h2>🖼️ Standard Icons</h2><div class="grid">
+        <div class="icon-item"><div class="icon-box dark"><img src="icons/logo-32.png"></div><span class="label">32px</span></div>
+        <div class="icon-item"><div class="icon-box dark"><img src="icons/logo-64.png"></div><span class="label">64px</span></div>
+        <div class="icon-item"><div class="icon-box dark"><img src="icons/logo-128.png"></div><span class="label">128px</span></div>
+        <div class="icon-item"><div class="icon-box dark"><img src="icons/logo-256.png"></div><span class="label">256px</span></div>
+    </div></section>
+    <section class="section"><h2>⭐ Favicons</h2><div class="grid">
+        <div class="icon-item"><div class="icon-box"><img src="favicon/favicon-16.png"></div><span class="label">16px</span></div>
+        <div class="icon-item"><div class="icon-box"><img src="favicon/favicon-32.png"></div><span class="label">32px</span></div>
+        <div class="icon-item"><div class="icon-box"><img src="favicon/favicon-48.png"></div><span class="label">48px</span></div>
+        <div class="icon-item"><div class="icon-box"><img src="favicon/favicon-192.png"></div><span class="label">192px</span></div>
+    </div></section>
+    <section class="section"><h2>🍎 Apple Touch Icons</h2><div class="grid">
+        <div class="icon-item"><div class="icon-box"><img src="apple/apple-touch-icon-60.png"></div><span class="label">60px</span></div>
+        <div class="icon-item"><div class="icon-box"><img src="apple/apple-touch-icon-120.png"></div><span class="label">120px</span></div>
+        <div class="icon-item"><div class="icon-box"><img src="apple/apple-touch-icon-180.png"></div><span class="label">180px</span></div>
+    </div></section>
+    <section class="section"><h2>🖥️ Dock Icons</h2>
+        <div class="dock-demo"><img src="dock/dock-64.png" style="width:48px;"><img src="dock/dock-128.png" style="width:64px;"></div>
+        <div class="grid" style="margin-top:20px;">
+            <div class="icon-item"><div class="icon-box"><img src="dock/dock-128.png"></div><span class="label">128px</span></div>
+            <div class="icon-item"><div class="icon-box"><img src="dock/dock-256.png"></div><span class="label">256px</span></div>
+        </div>
+    </section>
+    <section class="section"><h2>📣 Open Graph Images</h2>
+        <p style="margin-bottom:10px;font-size:14px;">OG Image (1200×630)</p>
+        <div class="og-preview"><img src="og/og-image.png"></div>
+    </section>
+    <div class="timestamp">Last generated: ${new Date().toLocaleString()}</div>
+</body>
+</html>`;
+    fs.writeFileSync('dist/showcase.html', html);
+    console.log('✓ dist/showcase.html');
 }
+
+await buildAll().catch(console.error);
