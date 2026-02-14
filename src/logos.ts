@@ -170,8 +170,22 @@ export function getMenuBarSVG(): string {
       <circle cx="${c.greenX}" cy="${c.greenY}" r="${c.circleRadius}" fill="none" stroke="black" stroke-width="${m.strokeWidth}"></circle>
       <circle cx="${c.redX}" cy="${c.redY}" r="${c.circleRadius}" fill="none" stroke="black" stroke-width="${m.strokeWidth}"></circle>
       <circle cx="${c.blueX}" cy="${c.blueY}" r="${c.circleRadius}" fill="none" stroke="black" stroke-width="${m.strokeWidth}"></circle>
-      <circle cx="${m.outerX}" cy="${m.outerY}" r="${m.outerRadius - m.outerStrokeWidth/2}" fill="none" stroke="black" stroke-width="${m.outerStrokeWidth}"></circle>
+      <circle cx="${m.outerX}" cy="${m.outerY}" r="${m.outerRadius - m.outerStrokeWidth/2}" fill="none" stroke="black" stroke-width="${m.strokeWidth}"></circle>
     </g>
+  </svg>`;
+}
+
+/**
+ * Generate favicon SVG (simplified color version on black background)
+ * Optimized for small sizes (16px-64px)
+ */
+export function getFaviconSVG(): string {
+  // Simplified version with solid fills for favicon sizes
+  return `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <rect width="64" height="64" rx="8" fill="#000000"/>
+    <circle cx="32" cy="22" r="12" fill="#00A652"/>
+    <circle cx="21" cy="40" r="12" fill="#ED1C24"/>
+    <circle cx="43" cy="40" r="12" fill="#2E3192"/>
   </svg>`;
 }
 

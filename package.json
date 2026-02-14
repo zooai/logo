@@ -2,6 +2,7 @@
   "name": "@zooai/logo",
   "version": "1.0.0",
   "description": "Official Zoo logo package with React components and utilities",
+  "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -23,7 +24,7 @@
   },
   "scripts": {
     "build": "npm run clean && npm run compile && npm run build:cli",
-    "build:cli": "tsc src/build.ts --outDir dist --module commonjs --target es2020 --esModuleInterop --skipLibCheck",
+    "build:cli": "tsc src/build.ts --outDir dist --module esnext --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck",
     "compile": "tsc",
     "clean": "rm -rf dist",
     "dev": "tsc --watch",
