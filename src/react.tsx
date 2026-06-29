@@ -1,5 +1,5 @@
 import React from 'react';
-import { getColorSVG, getMonoSVG, getWhiteSVG } from './logos';
+import { getColorSVG, getMonoSVG, getWhiteSVG, getAnimatedSVG } from './logos';
 import type { LogoVariant } from './types';
 
 export interface ZooLogoProps {
@@ -35,6 +35,9 @@ export const ZooLogo: React.FC<ZooLogoProps> = ({
       break;
     case 'white':
       svg = getWhiteSVG();
+      break;
+    case 'animated':
+      svg = getAnimatedSVG();
       break;
     default:
       svg = getColorSVG();
