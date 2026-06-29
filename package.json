@@ -1,6 +1,6 @@
 {
   "name": "@zooai/logo",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Official Zoo logo package with React components and utilities",
   "type": "module",
   "main": "dist/index.js",
@@ -8,7 +8,8 @@
   "types": "dist/index.d.ts",
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "svg"
   ],
   "exports": {
     ".": {
