@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
-import { getColorSVG, getMonoSVG } from './logos';
+import { getColorSVG, getMonoSVG } from './logos.js';
 
 /**
  * Generate a PNG icon from SVG

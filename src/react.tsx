@@ -1,6 +1,6 @@
 import React from 'react';
-import { getColorSVG, getMonoSVG, getWhiteSVG, getAnimatedSVG } from './logos';
-import type { LogoVariant } from './types';
+import { getColorSVG, getMonoSVG, getWhiteSVG, getAnimatedSVG } from './logos.js';
+import type { LogoVariant } from './types.js';
 
 export interface ZooLogoProps {
   variant?: LogoVariant;

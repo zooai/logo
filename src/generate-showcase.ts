@@ -7,7 +7,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import sharp from 'sharp';
-import { getColorSVGCropped, getMonoSVG, getMenuBarSVG } from './logos';
+import { getColorSVGCropped, getMonoSVG, getMenuBarSVG } from './logos.js';
 
 async function generateShowcaseImages() {
     console.log('🎨 Generating showcase images for README...\n');
