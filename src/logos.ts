@@ -1,5 +1,5 @@
-import type { LogoSettings, LogoOptions } from './types';
-import { ANIMATED_SVG } from './animated';
+import type { LogoSettings, LogoOptions } from './types.js';
+import { ANIMATED_SVG } from './animated.js';
 
 // Final perfect logo settings
 export const LOGO_SETTINGS: LogoSettings = {
