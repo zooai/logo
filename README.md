@@ -2,7 +2,7 @@
   <img src=".github/hero.svg" alt="@zooai/logo" width="100%" />
 </p>
 
-# Logo Assets
+# Zoo — Brand & Logo Assets
 
 Official logos and marks.
 

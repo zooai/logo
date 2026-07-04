@@ -1,6 +1,6 @@
 {
   "name": "@zooai/logo",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Official Zoo logo package with React components and utilities",
   "type": "module",
   "main": "dist/index.js",
@@ -72,5 +72,11 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "brand": {
+    "name": "Zoo",
+    "tagline": "Official brand marks — SVG, PNG, ICO, favicons & app icons.",
+    "github": "zooai",
+    "domain": "zoo.ngo"
   }
 }
