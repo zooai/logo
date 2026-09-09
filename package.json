@@ -1,6 +1,6 @@
 {
   "name": "@zooai/logo",
-  "version": "1.0.0",
+  "version": "1.0.6",
   "description": "Official Zoo logo package with React components and utilities",
   "type": "module",
   "main": "dist/index.js",
@@ -8,7 +8,8 @@
   "types": "dist/index.d.ts",
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "svg"
   ],
   "exports": {
     ".": {
@@ -23,7 +24,7 @@
     }
   },
   "scripts": {
-    "build": "npm run clean && npm run compile && npm run build:cli",
+    "build": "npm run clean && npm run compile && npm run build:cli && npm run generate",
     "build:cli": "tsc src/build.ts --outDir dist --module esnext --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck",
     "compile": "tsc",
     "clean": "rm -rf dist",
@@ -48,17 +49,17 @@
   "author": "Zoo AI",
   "license": "MIT",
   "dependencies": {
-    "sharp": "^0.34.4"
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
-    "@types/minimatch": "^5.1.2",
-    "@types/node": "^20.19.17",
-    "@types/react": "^18.3.24",
-    "react": "^18.3.1",
-    "typescript": "^5.9.2"
+    "@types/minimatch": "^6.0.0",
+    "@types/node": "26.4.0",
+    "@types/react": "19.2.18",
+    "react": "19.2.8",
+    "typescript": "7.0.2"
   },
   "peerDependencies": {
-    "react": ">=16.8.0"
+    "react": ">=19.2.8"
   },
   "peerDependenciesMeta": {
     "react": {
@@ -71,5 +72,11 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "brand": {
+    "name": "Zoo",
+    "tagline": "Official brand marks — SVG, PNG, ICO, favicons & app icons.",
+    "github": "zooai",
+    "domain": "zoo.ngo"
   }
 }

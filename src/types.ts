@@ -20,7 +20,10 @@ export interface LogoSettings {
   };
 }
 
-export type LogoVariant = 'color' | 'mono' | 'white';
+// 'cropped' = the color prism tightly cropped to its outer circle (no padding) —
+// use it for inline composition (og:image, README hero, nav) so the mark renders
+// at a predictable size next to other logos.
+export type LogoVariant = 'color' | 'mono' | 'white' | 'cropped' | 'animated';
 export type LogoFormat = 'svg' | 'dataUrl' | 'base64';
 
 export interface LogoOptions {

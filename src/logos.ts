@@ -1,4 +1,5 @@
-import type { LogoSettings, LogoOptions } from './types';
+import type { LogoSettings, LogoOptions } from './types.js';
+import { ANIMATED_SVG } from './animated.js';
 
 // Final perfect logo settings
 export const LOGO_SETTINGS: LogoSettings = {
@@ -203,6 +204,9 @@ export function getLogoDataUrl(options: LogoOptions = {}): string {
     case 'white':
       svg = getWhiteSVG();
       break;
+    case 'cropped':
+      svg = getColorSVGCropped();
+      break;
     default:
       svg = getColorSVG();
   }
@@ -225,6 +229,9 @@ export function getLogoBase64(options: LogoOptions = {}): string {
     case 'white':
       svg = getWhiteSVG();
       break;
+    case 'cropped':
+      svg = getColorSVGCropped();
+      break;
     default:
       svg = getColorSVG();
   }
@@ -237,6 +244,11 @@ export function getLogoBase64(options: LogoOptions = {}): string {
  */
 export function getLogo(options: LogoOptions = {}): string {
   const { variant = 'color', format = 'svg' } = options;
+  if (variant === 'animated') {
+    if (format === 'dataUrl') return getAnimatedDataUrl();
+    if (format === 'base64') return btoa(unescape(encodeURIComponent(getAnimatedSVG())));
+    return getAnimatedSVG();
+  }
 
   switch (format) {
     case 'dataUrl':
@@ -262,3 +274,19 @@ export const zooLogoWhite = getWhiteSVG();
 export const zooLogoDataUrl = getLogoDataUrl();
 export const zooLogoMonoDataUrl = getLogoDataUrl({ variant: 'mono' });
 export const zooLogoWhiteDataUrl = getLogoDataUrl({ variant: 'white' });
+/**
+ * Interactive animated mark — load (assemble) → hover (one graceful turn,
+ * returns to rest) → press (squash). Pure CSS, no JS. Inline this SVG into
+ * the DOM (not <img>) for the hover/press interactions to fire.
+ */
+export function getAnimatedSVG(): string {
+  return ANIMATED_SVG;
+}
+
+/** Animated mark as a data: URL (load animation runs even in <img>). */
+export function getAnimatedDataUrl(): string {
+  return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(ANIMATED_SVG)));
+}
+
+export const zooLogoAnimated = ANIMATED_SVG;
+export const zooLogoAnimatedDataUrl = getAnimatedDataUrl();
