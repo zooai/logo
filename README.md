@@ -4,6 +4,8 @@
 
 # Zoo — Brand & Logo Assets
 
+[![Open in Hanzo](https://hanzo.app/badges/open-in-hanzo.svg)](https://hanzo.app/dev/open?repo=github.com/zooai/logo&ref=main&action=open) [![Edit with Hanzo](https://hanzo.app/badges/edit-with-hanzo.svg)](https://hanzo.app/dev/open?repo=github.com/zooai/logo&ref=main&action=edit)
+
 Official Zoo brand marks in every format and size — SVG, PNG, multi-resolution ICO, favicons, app/dock/tray icons, and social cards. Installable via `@zooai/logo`, browsable in `dist/`.
 
 ## Formats
